@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <style>
+    #main {
+      width: 1000px;
+      height: 1000px;
+    }
+
+    .el-button {
+      display: inline-block;
+      line-height: 1;
+      white-space: nowrap;
+      cursor: pointer;
+      background: #fff;
+      border: 1px solid #dcdfe6;
+      color: #606266;
+      -webkit-appearance: none;
+      text-align: center;
+      box-sizing: border-box;
+      outline: none;
+      margin: 0;
+      transition: .1s;
+      font-weight: 500;
+      -moz-user-select: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      padding: 12px 20px;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="prev" class="el-button">撤销</div>
+  <div id="next" class="el-button">反撤销</div>
+  <div id="saveImages" class="el-button">保存图片</div>
+
+  <div id="main"></div>
+
+  <script src="jquery-3.4.1.js"></script>
+  <script src="echarts.js"></script>
+  <script>
+    // 数据源，全局变量
+    var dataSource = {}; // 数据源
+    var firseDataSource = {}; // 第一次的数据源
+
+
+    // var myChart = document.getElementById("div1");
+    var myChart = echarts.init(document.getElementById("main"));
+    myChart.showLoading();
+
+    // 递归数据
+    var deepfn = function (data, param) {
+      data.map((item, index) => { //利用foreach循环遍历
+
+        if (item.name == param.name)//判断递归结束条件
+        {
+          data[index].collapsed = !param.collapsed
+        } else if (item.children && item.children.length > 0) //判断chlidren是否有数据
+        {
+          deepfn(item.children, param);  //递归调用                      
+        }
+      })
+
+      // console.log('arrarr---', arr)
+      return data
+    }
+
+    // 递归数据
+    function deepCollapsed(datum) {
+      
+      datum.map((item, index) => { //利用foreach循环遍历
+
+        // if (!item.collapsed)//判断递归结束条件
+        // {
+        //   // console.log('item', item)
+        //   datum[index].collapsed = false
+        // } else 
+        if (item.children && item.children.length > 0) //判断chlidren是否有数据
+        {
+          // console.log('item', item)
+          datum[index].collapsed = false
+          deepCollapsed(item.children); //递归调用
+        }else{
+          console.log('item2', item)
+          if (!item.collapsed){ //判断递归结束条件
+            // console.log('item', item)
+            datum[index].collapsed = false
+          }
+        }
+      })
+
+      // console.log('arrarr---', arr)
+      return datum
+    }
+
+
+
+
+
+
+    //栈
+    function ArrayStack() {
+      var arr = [];
+      //压栈操作  
+      this.push = function (element) {
+        arr.push(element);
+        console.log('push', arr)
+      }
+      //退栈操作  
+      this.pop = function () {
+        // console.log(arr)
+        console.log('pop', arr)
+        return arr.pop();
+      }
+      //获取栈顶元素  
+      this.top = function () {
+        return arr[arr.length - 1];
+      }
+      //获取栈长  
+      this.size = function () {
+        return arr.length;
+      }
+      //清空栈  
+      this.clear = function () {
+        arr = [];
+        return true;
+      }
+
+      this.toString = function () {
+        console.log('toString', arr)
+        return arr.toString();
+      }
+    }
+
+    var stackZ = new ArrayStack(); // 撤销
+    var stackY = new ArrayStack(); // 回选
+    var deepfnData = {};
+    let arrdeepfn = [];
+
+
+    //关键点！点击树节点
+    function clickFun(param) {
+      if (typeof param.seriesIndex == 'undefined') {
+        return;
+      }
+      // console.log('关键点！点击树节点', param)
+      if (param.type == 'click') {
+        console.log(param.name);
+
+        console.log('param', param)
+        // dataSource.children[0].collapsed = true
+        console.log('dataSource', dataSource)
+
+        deepfnData = JSON.stringify(deepfn([dataSource], param));
+
+        // let options = myChart.getOption();//获取已生成图形的Option param
+        // let nodesOption = options.series[0].data;//获得所有节点的数组
+
+
+
+        // if(stackZ.size().length==0){
+        //   stackZ.push(dataSource);
+        // }
+        stackZ.push(JSON.parse(deepfnData)[0]);
+
+        //刷新数据
+        // var option = myChart.getOption();
+        // option.series[0].data = [JSON.parse(deepfnData)[0]];
+        // myChart.setOption(option);
+
+
+
+
+        // loadChart(formatData)
+
+      }
+    }
+
+
+
+    // 渲染图
+    function loadChart(dataSource) {
+
+      console.log('loadChart----', dataSource)
+      myChart.clear();
+      myChart.setOption(option = {
+        tooltip: {
+          trigger: 'item',
+          triggerOn: 'mousemove',
+        },
+        series: [
+          {
+            type: 'tree',
+
+            data: [dataSource],
+
+            top: '1%',
+            left: '7%',
+            bottom: '1%',
+            right: '20%',
+
+            symbolSize: 7,
+
+            label: {
+              position: 'left',
+              verticalAlign: 'middle',
+              align: 'right',
+              fontSize: 9
+            },
+
+            leaves: {
+              label: {
+                position: 'right',
+                verticalAlign: 'middle',
+                align: 'left'
+              }
+            },
+
+            expandAndCollapse: true,
+            animationDuration: 550,
+            animationDurationUpdate: 750,
+            feature: {
+
+              saveAsImage: {
+
+                show: true,
+
+                excludeComponents: ['toolbox'],
+
+                pixelRatio: 2
+
+              }
+
+            }
+          }
+        ]
+      }, true);
+
+    }
+
+
+    // 获取数据
+    $.get('flare.json', function (data) {
+      myChart.hideLoading();
+
+      dataSource = data
+      firseDataSource = data
+
+      echarts.util.each(data.children, function (datum, index) {
+        // console.log('datum', datum)
+        deepCollapsed([datum])
+      });
+
+      myChart.on("click", clickFun);
+
+
+      // stackZ.push(firseDataSource)
+
+      // console.log('stackZ', stackZ.size())
+
+      loadChart(dataSource)
+
+    });
+
+    // 保存图片-https://blog.csdn.net/elichan/article/details/89487096
+
+    function exportpic(val) {
+      let myChart = echarts.init(document.getElementById(val));
+      let picInfo = myChart.getDataURL({
+        type: 'png',
+        pixelRatio: 1.5,  //放大两倍下载，之后压缩到同等大小展示。解决生成图片在移动端模糊问题
+        backgroundColor: '#fff'
+      });//获取到的是一串base64信息
+
+      const elink = document.createElement('a');
+      elink.download = '统计图';
+      elink.style.display = 'none';
+      elink.href = picInfo;
+      document.body.appendChild(elink);
+      elink.click();
+      URL.revokeObjectURL(elink.href); // 释放URL 对象
+      document.body.removeChild(elink)
+    }
+
+
+    // 撤销
+    $("#prev").on("click", function () {
+      var p = stackZ.pop();
+      // let formatP = JSON.stringify(p);
+      // console.log('dataSource', dataSource, stackZ)
+      // console.log(p.toString())
+      if (p) {
+        // loadChart(p)
+
+        // let options = myChart.getOption(); //获取已生成图形的Option param
+        // let nodesOption = options.series[0].data; //获得所有节点的数组
+        // echarts.util.each(nodesOption.children, function (datum, index) {
+        //   console.log('datum', datum)
+        //   datum.collapsed = true
+        // });
+        // // nodesOption = p;//获得所有节点的数组
+        // console.log('options', options)
+        // console.log('nodesOption', nodesOption)
+        // console.log('myChart', myChart)
+        // myChart.setOption(options, true);
+
+
+        var option = myChart.getOption();
+        option.series[0].data = [p];
+
+        myChart.setOption(option, true);
+        stackY.push(p)
+
+        console.log('p', p)
+      }
+
+      // console.log('撤销', stackY.toString())
+    })
+
+    // 前进
+    $("#next").on("click", function () {
+      // var p = stackY.pop();
+      //	console.log("p:"+p)			//TODO
+      // if (p) {
+      //   if (p == text.val()) {
+      //     ctrlY();
+      //   } else {
+      //     text.val(p);
+      //     stackZ.push(p);
+      //   }
+      // } else {
+      //   text.val($('#hiText').val());
+      // }
+      console.log('前进', stackZ.toString())
+
+      let options = myChart.getOption();//获取已生成图形的Option param
+      let nodesOption = options.series[0].data;//获得所有节点的数组
+
+      console.log('options', options)
+      console.log('nodesOption', nodesOption)
+      console.log('datasource', dataSource)
+    })
+
+    $("#saveImages").on("click", function () {
+      exportpic("main")
+    })
+
+
+
+  </script>
+</body>
+
+</html>

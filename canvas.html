@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title></title>
+  <style>
+    * {
+      padding: 0;
+      margin: 0;
+    }
+
+    #top {
+      text-align: center;
+    }
+
+    #box {
+      width: 90%;
+      height: 500px;
+      margin: 10px auto;
+      border: 1px solid #ddd;
+      overflow: hidden;
+    }
+
+    #box div {
+      position: absolute;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+
+<body style="height: 1000px;" οndragstart="return false">
+  <div id="top">
+    粗细：
+    <select id="s1">
+      <option value="10">10</option>
+      <option value="12">12</option>
+      <option value="14">14</option>
+      <option value="16">16</option>
+      <option value="18">18</option>
+      <option value="20">20</option>
+    </select>
+    颜色：
+    <select id="s2">
+      <option value="red">红色</option>
+      <option value="blue">蓝色</option>
+      <option value="green">绿色</option>
+      <option value="pink">橙色</option>
+      <option value="black">黑色</option>
+      <option value="gray">灰色</option>
+    </select>
+    <button id="null">清空</button>
+    <button id="back">撤回</button>
+    <button id="Revoke">反撤回</button>
+  </div>
+  <div id="box">
+
+  </div>
+  <script>
+    var os1 = document.getElementById("s1"),
+      os2 = document.getElementById("s2"),
+      box = document.getElementById("box"),
+      onull = document.getElementById("null"),
+      back = document.getElementById("back"),
+      revoke = document.getElementById("Revoke"),
+      arrBack = [], //存数据
+      arrRevoke = []; //存撤出数据
+
+    box.onmousedown = function () {
+      arrBack[arrBack.length] = [];
+
+      this.onmousemove = function (e) {
+        e = e || window.event;
+        var div = document.createElement("div"); //创建div节点
+        div.style.cssText = "width:" + os1.value + "px; height:" + os1.value + "px; background:" + os2.value + ";";
+        div.style.top = e.clientY + "px";
+        div.style.left = e.clientX + "px";
+        box.appendChild(div);
+        arrBack[arrBack.length - 1].push(div);
+      }
+
+    }
+    //当鼠标按键松开，注销鼠标滑动事件
+    document.onmouseup = function () {
+      console.log(arrBack)
+      box.onmousemove = null;
+    }
+
+    //清空
+    onull.onclick = function () {
+      box.innerHTML = "";
+      arrBack = [];
+      arrRevoke = [];
+    }
+
+    //撤回
+    back.onclick = function () {
+      if (arrBack.length) {
+        for (var i = 0; i < arrBack[arrBack.length - 1].length; i++) {
+          box.removeChild(arrBack[arrBack.length - 1][i]);
+        }
+
+        arrRevoke.push(arrBack.pop());
+      }
+
+      console.log('arrRevoke', arrRevoke)
+    }
+
+    //反撤回
+    revoke.onclick = function () {
+      if (arrRevoke.length) {
+        for (var i = 0; i < arrRevoke[arrRevoke.length - 1].length; i++) {
+          box.appendChild(arrRevoke[arrRevoke.length - 1][i]);
+        }
+        arrBack.push(arrRevoke.pop());
+      }
+      console.log('arrRevoke', arrBack)
+    }
+  </script>
+</body>
+
+</html>
