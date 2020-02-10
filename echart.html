@@ -40,6 +40,8 @@
 <body>
   <div id="prev" class="el-button">撤销</div>
   <div id="next" class="el-button">反撤销</div>
+  <div id="lookData" class="el-button">查看数据</div>
+
   <div id="saveImages" class="el-button">保存图片</div>
 
   <div id="main"></div>
@@ -169,7 +171,10 @@
         // if(stackZ.size().length==0){
         //   stackZ.push(dataSource);
         // }
-        stackZ.push(JSON.parse(deepfnData)[0]);
+        if(param.data.children){ // 如果有下级才加入
+          stackZ.push(JSON.parse(deepfnData)[0]);
+        }
+        
 
         //刷新数据
         // var option = myChart.getOption();
@@ -313,13 +318,22 @@
         // myChart.setOption(options, true);
 
 
-        var option = myChart.getOption();
-        option.series[0].data = [p];
+        var options = myChart.getOption();
+        let nodesOption = options.series[0].data;//获得所有节点的数组
+        options.series[0].data = [p];
 
-        myChart.setOption(option, true);
+        console.log('options', options)
+
+        myChart.setOption(options);
         stackY.push(p)
 
-        console.log('p', p)
+
+        
+
+        console.log('p-----', p)
+        // console.log('options', options)
+        console.log('nodesOption', nodesOption)
+        console.log('datasource', dataSource)
       }
 
       // console.log('撤销', stackY.toString())
@@ -343,6 +357,18 @@
 
       let options = myChart.getOption();//获取已生成图形的Option param
       let nodesOption = options.series[0].data;//获得所有节点的数组
+
+      console.log('options', options)
+      console.log('nodesOption', nodesOption)
+      console.log('datasource', dataSource)
+    })
+
+    $("#lookData").on("click", function () {
+      let options = myChart.getOption();//获取已生成图形的Option param
+      let nodesOption = options.series[0].data;//获得所有节点的数组
+
+
+      console.log('前进', stackZ.toString())
 
       console.log('options', options)
       console.log('nodesOption', nodesOption)
