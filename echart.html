@@ -53,6 +53,11 @@
     var dataSource = {}; // 数据源
     var firseDataSource = {}; // 第一次的数据源
 
+    var stackZ = new ArrayStack(); // 撤销
+    var stackY = new ArrayStack(); // 回选
+    var deepfnData = {};
+    var deepfnDataStack = {};
+
 
     // var myChart = document.getElementById("div1");
     var myChart = echarts.init(document.getElementById("main"));
@@ -60,11 +65,15 @@
 
     // 递归数据
     var deepfn = function (data, param) {
+      // console.log('data', data)
       data.map((item, index) => { //利用foreach循环遍历
 
         if (item.name == param.name)//判断递归结束条件
         {
-          data[index].collapsed = !param.collapsed
+          // console.log('data[index].collapsed', data[index].collapsed, param.data.collapsed)
+          // data[index].collapsed = !data[index].collapsed
+          data[index].collapsed = !data[index].collapsed
+          
         } else if (item.children && item.children.length > 0) //判断chlidren是否有数据
         {
           deepfn(item.children, param);  //递归调用                      
@@ -73,6 +82,41 @@
 
       // console.log('arrarr---', arr)
       return data
+    }
+
+    // 递归数据-存给历史数据
+
+    function deepfnStack(data2, param) {
+      console.log('data2', data2)
+      let temp = []
+      const result = []
+      for (let i = 0; i < data2.length; i++) {
+        let obj = {}
+
+        const isTrue = data2[i].name == param.name
+        if (isTrue) {
+          obj = {
+            ...data2[i],
+            collapsed: false
+          }
+        } else {
+          obj = {
+            ...data2[i]
+          }
+        }
+        temp = deepfnStack(data2[i].children, param)
+        if (data2[i].children.length > 0) {
+          obj.children = temp
+        } else {
+          if (data2[i].teamNumber > 0) {
+            obj.children = []
+          } else {
+            obj.children = null
+          }
+        }
+        result.push(obj)
+      }
+      return result
     }
 
     // 递归数据
@@ -95,6 +139,7 @@
           if (!item.collapsed){ //判断递归结束条件
             // console.log('item', item)
             datum[index].collapsed = false
+            datum[index].children = []
           }
         }
       })
@@ -142,11 +187,6 @@
       }
     }
 
-    var stackZ = new ArrayStack(); // 撤销
-    var stackY = new ArrayStack(); // 回选
-    var deepfnData = {};
-    let arrdeepfn = [];
-
 
     //关键点！点击树节点
     function clickFun(param) {
@@ -161,7 +201,12 @@
         // dataSource.children[0].collapsed = true
         console.log('dataSource', dataSource)
 
-        deepfnData = JSON.stringify(deepfn([dataSource], param));
+
+
+        let options = myChart.getOption();//获取已生成图形的Option param
+        let nodesOption = options.series[0].data;//获得所有节点的数组
+        console.log('options', options)
+        deepfnData = JSON.stringify(deepfn(nodesOption, param));
 
         // let options = myChart.getOption();//获取已生成图形的Option param
         // let nodesOption = options.series[0].data;//获得所有节点的数组
@@ -172,14 +217,12 @@
         //   stackZ.push(dataSource);
         // }
         if(param.data.children){ // 如果有下级才加入
-          stackZ.push(JSON.parse(deepfnData)[0]);
+          deepfnDataStack = JSON.stringify(deepfnStack(nodesOption, param));
+          stackZ.push(JSON.parse(deepfnDataStack)[0]);
         }
         
-
         //刷新数据
-        // var option = myChart.getOption();
-        // option.series[0].data = [JSON.parse(deepfnData)[0]];
-        // myChart.setOption(option);
+        myChart.setOption(options);
 
 
 
